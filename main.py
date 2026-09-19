@@ -24,7 +24,7 @@ print(response.choices[0].message.content)
 if response.usage is None:
     raise RuntimeError("Response usage is None. This may indicate an issue with the API response.")
 print(f"Prompt tokens: {response.usage.prompt_tokens}")
-print(f"Completion tokens: {response.usage.completion_tokens}")
+print(f"Response tokens: {response.usage.completion_tokens}")
 
 
 def main():
