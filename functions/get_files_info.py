@@ -1,6 +1,6 @@
 import os
 
-
+#validates the directory and lists the files in it, along with their sizes and whether they are directories or not
 def get_files_info(working_directory: str, directory: str = ".") -> str:
 
     try:
@@ -31,7 +31,28 @@ def get_files_info(working_directory: str, directory: str = ".") -> str:
             return f'Error: "{directory}" is not a directory'
 
     
-        if is_directory:
-            return f'Success: "{directory}" is within the working directory'
+        item_list = os.listdir(target_directory)
+
+        files_info = []
+
+        for item in item_list:
+            filepath = os.path.join(target_directory, item)
+            is_dir = os.path.isdir(filepath)
+            file_size = os.path.getsize(filepath)
+            
+            info_string = f"- {item}: file_size={file_size} bytes, is_dir={is_dir}"
+            files_info.append(info_string)
+
+        files_info_str = "\n".join(files_info)
+
+        return files_info_str
+        
+
+
+
+
     except Exception as e:
         return f"Error: {e}"
+
+
+    
