@@ -6,7 +6,7 @@ from prompts import system_prompt
 from call_function import available_functions
 import json
 from functions.get_files_info import schema_get_files_info
-
+from call_function import call_function
 
 
 
@@ -46,7 +46,12 @@ def main():
 
         for tool_call in message.tool_calls:
             function_args = json.loads(tool_call.function.arguments or "{}")
-            print(f"Calling function: {tool_call.function.name}({function_args})")
+            result_message = call_function(tool_call, args.verbose)
+            if result_message["content"] == "":
+                raise RuntimeError(f"Error: Function {tool_call.function.name} returned an empty response.")
+
+            if args.verbose:
+                print(f"-> {result_message['content']}")
     else:
         print(message.content)
 
