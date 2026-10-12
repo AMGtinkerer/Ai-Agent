@@ -14,7 +14,7 @@ from call_function import call_function
 
 def main():
 
-
+    #Set up environment for using the OpenRouter API key
 
     load_dotenv()
     api_key = os.environ.get("OPENROUTER_API_KEY")
@@ -34,35 +34,52 @@ def main():
     {"role": "system", "content": system_prompt},
     {"role": "user", "content": args.user_prompt},
     ]
-    response = client.chat.completions.create(
-        model="openrouter/free",
-        messages=messages,
-        temperature=0,
-        tools=available_functions,
-    )
-    message = response.choices[0].message
-
-    if message.tool_calls is not None:
-
-        for tool_call in message.tool_calls:
-            function_args = json.loads(tool_call.function.arguments or "{}")
-            result_message = call_function(tool_call, args.verbose)
-            if result_message["content"] == "":
-                raise RuntimeError(f"Error: Function {tool_call.function.name} returned an empty response.")
-
-            if args.verbose:
-                print(f"-> {result_message['content']}")
-    else:
-        print(message.content)
+    
+    #Seperate the above to keep outside of the main function loop
 
     
-    if response.usage is None:
-        raise RuntimeError("Response usage is None. This may indicate an issue with the API response.")
-    if args.verbose:
-        print(f"User prompt: {args.user_prompt}")
-        print(f"Prompt tokens: {response.usage.prompt_tokens}")
-        print(f"Response tokens: {response.usage.completion_tokens}")
-        print("Answer brought to you by Herms!")
+
+
+    
+    for _ in range(20):
+
+    
+        response = client.chat.completions.create(
+            model="openrouter/free",
+            messages=messages,
+            temperature=0,
+            tools=available_functions,
+        )
+        message = response.choices[0].message
+
+        messages.append(message)
+
+        if message.tool_calls:
+
+            for tool_call in message.tool_calls:
+                function_args = json.loads(tool_call.function.arguments or "{}")
+                result_message = call_function(tool_call, args.verbose)
+                if result_message["content"] == "":
+                    raise RuntimeError(f"Error: Function {tool_call.function.name} returned an empty response.")
+                messages.append(result_message)
+
+                if args.verbose:
+                    print(f"-> {result_message['content']}")
+        else:
+            print(message.content)
+            return
+
+    
+        if response.usage is None:
+            raise RuntimeError("Response usage is None. This may indicate an issue with the API response.")
+        if args.verbose:
+            print(f"User prompt: {args.user_prompt}")
+            print(f"Prompt tokens: {response.usage.prompt_tokens}")
+            print(f"Response tokens: {response.usage.completion_tokens}")
+            print("Answer brought to you by Herms!")
+
+    raise RuntimeError(f"Error: Took to long to complete, stop loss in place to prevent token loss")
+
 
 
 if __name__ == "__main__":
